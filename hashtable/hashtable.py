@@ -24,7 +24,7 @@ class HashTable:
     def __init__(self, capacity):
         # Your code here
         self.capacity = capacity
-        self.storage = [None] * capacity
+        self.storage = [None] * capacity   # [None] is a list with one element. That one element is None
 
     def get_num_slots(self):
         """
@@ -65,10 +65,10 @@ class HashTable:
         Implement this, and/or FNV-1.
         """
         # Your code here
-        hash = 5381
-        for char in key:
-            hash = (hash * 33) + ord(char)
-        return hash
+        hash1 = 5381     # Stored in binary. do not name variable hash. hash is already built in function 
+        for char in key:   #For each character hash
+            hash1 = (hash1 * 33) + ord(char)   # Ord  returns the unicode code. Add new number to old number. Then add each character at bit level to make it more unpredictable.
+        return hash1
 
     def hash_index(self, key):
         """
