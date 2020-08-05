@@ -2,6 +2,7 @@ class HashTableEntry:
     """
     Linked List hash table key/value pair
     """
+
     def __init__(self, key, value):
         self.key = key
         self.value = value
@@ -22,7 +23,9 @@ class HashTable:
 
     def __init__(self, capacity):
         # Your code here
-
+        self.capacity = capacity
+        self.storage = [None] * capacity
+        self.total = 0
 
     def get_num_slots(self):
         """
@@ -35,7 +38,7 @@ class HashTable:
         Implement this.
         """
         # Your code here
-
+        return self.capacity
 
     def get_load_factor(self):
         """
@@ -44,7 +47,7 @@ class HashTable:
         Implement this.
         """
         # Your code here
-
+        return self.total / self.capacity
 
     def fnv1(self, key):
         """
@@ -54,7 +57,18 @@ class HashTable:
         """
 
         # Your code here
+        FNV_offset_basis = 14695981039346656037
+        FNV_prime = 1099511628211
 
+        hashed_var = FNV_offset_basis
+
+        string_bytes = key.encode()
+
+        for b in string_bytes:
+            hashed_var = hashed_var * FNV_prime
+            hashed_var = hashed_var ^ b
+
+        return hashed_var
 
     def djb2(self, key):
         """
@@ -63,15 +77,18 @@ class HashTable:
         Implement this, and/or FNV-1.
         """
         # Your code here
-
+        hash = 5381
+        for char in key:
+            hash = (hash * 33) + ord(char)
+        return hash
 
     def hash_index(self, key):
         """
         Take an arbitrary key and return a valid integer index
         between within the storage capacity of the hash table.
         """
-        #return self.fnv1(key) % self.capacity
-        return self.djb2(key) % self.capacity
+        return self.fnv1(key) % self.capacity
+        # return self.djb2(key) % self.capacity
 
     def put(self, key, value):
         """
@@ -81,8 +98,26 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        # Your code here Modify put(), get(), and delete() methods to handle collisions.
 
+        index = self.hash_index(key)
+        current = self.storage[index]
+
+        if current:
+            while current:
+                if current.key == key:
+                    current.value = value
+                    self.total += 1
+                    return
+                if current.next:
+                    current = current.next
+                else:
+                    current.next = HashTableEntry(key, value)
+        else:
+            self.storage[index] = HashTableEntry(key, value)
+        # When load factor increases above 0.7, automatically rehash the table to double its previous size.
+        if self.get_load_factor() >= 0.7:
+            self.resize(self.capacity * 2)
 
     def delete(self, key):
         """
@@ -93,7 +128,21 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        index = self.hash_index(key)
+        current = self.storage[index]
 
+        if current:
+            while current:
+                if current.key == key:
+                    self.total -= 1
+                    self.storage[index] = current.next
+                    return
+                elif current.next:
+                    current = current.next
+                else:
+                    return
+        else:
+            return
 
     def get(self, key):
         """
@@ -104,7 +153,17 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        if self.storage[self.hash_index(key)]:
+            current = self.storage[self.hash_index(key)]
 
+            while current.next:
+                if current.key == key:
+                    return current.value
+                current = current.next
+
+            if current.key == key:
+                return current.value
+        return
 
     def resize(self, new_capacity):
         """
@@ -114,7 +173,17 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        prev_storage = self.storage
+        self.storage = [None] * new_capacity
+        self.capacity = new_capacity
 
+        for x in prev_storage:
+            if x:
+                self.storage[self.fnv1(i.key)] = i
+                current = x.next
+                while current:
+                    self.storage[self.fnv1(current.key)] = current
+                    current = current.next
 
 
 if __name__ == "__main__":
@@ -141,7 +210,7 @@ if __name__ == "__main__":
 
     # Test resizing
     old_capacity = ht.get_num_slots()
-    ht.resize(ht.capacity * 2)
+  #  ht.resize(ht.capacity * 2)
     new_capacity = ht.get_num_slots()
 
     print(f"\nResized from {old_capacity} to {new_capacity}.\n")
